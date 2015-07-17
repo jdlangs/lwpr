@@ -701,17 +701,17 @@ static PyObject *PyLWPR_rf_center(PyLWPR *self, PyObject *args) {
    LWPR_Model *model = &(self->model);
 
    if (!PyArg_ParseTuple(args, "ii", &dim, &n))  return NULL;
-   
+
    if (dim<0 || dim>=model->nOut) {
       PyErr_SetString(PyExc_TypeError, "First parameter must indicate output dimension (0 <= dim < model.nOut).");
       return NULL;
    }
-   
+
    if (n<0 || n>=model->sub[dim].numRFS) {
       PyErr_SetString(PyExc_TypeError, "Second parameter must indicate receptive field (0 <= n < model.num_rf[dim]).");
       return NULL;
    }
-   
+
    return get_array_from_vector(model->nIn, model->sub[dim].rf[n]->c);
 }
 
@@ -732,6 +732,67 @@ static PyObject *PyLWPR_rf_D(PyLWPR *self, PyObject *args) {
    }
    
    return get_array_from_matrix(model->nIn, model->nInStore, model->nIn, model->sub[dim].rf[n]->D);
+}
+
+static PyObject *PyLWPR_rf_beta(PyLWPR *self, PyObject *args) {
+   int dim, n;
+   LWPR_Model *model = &(self->model);
+
+   if (!PyArg_ParseTuple(args, "ii", &dim, &n))  return NULL;
+
+   if (dim<0 || dim>=model->nOut) {
+      PyErr_SetString(PyExc_TypeError, "First parameter must indicate output dimension (0 <= dim < model.nOut).");
+      return NULL;
+   }
+
+   if (n<0 || n>=model->sub[dim].numRFS) {
+      PyErr_SetString(PyExc_TypeError, "Second parameter must indicate receptive field (0 <= n < model.num_rf[dim]).");
+      return NULL;
+   }
+
+   LWPR_ReceptiveField * rf_mdl = model->sub[dim].rf[n];
+   return get_array_from_vector(rf_mdl->nReg, rf_mdl->beta);
+}
+
+static PyObject *PyLWPR_rf_beta0(PyLWPR *self, PyObject *args) {
+   int dim, n;
+   LWPR_Model *model = &(self->model);
+
+   if (!PyArg_ParseTuple(args, "ii", &dim, &n))  return NULL;
+
+   if (dim<0 || dim>=model->nOut) {
+      PyErr_SetString(PyExc_TypeError, "First parameter must indicate output dimension (0 <= dim < model.nOut).");
+      return NULL;
+   }
+
+   if (n<0 || n>=model->sub[dim].numRFS) {
+      PyErr_SetString(PyExc_TypeError, "Second parameter must indicate receptive field (0 <= n < model.num_rf[dim]).");
+      return NULL;
+   }
+
+   double beta0 = model->sub[dim].rf[n]->beta0;
+   double b0arr[1]; b0arr[0] = beta0;
+   return get_array_from_vector(1, b0arr);
+}
+
+static PyObject *PyLWPR_rf_s(PyLWPR *self, PyObject *args) {
+   int dim, n;
+   LWPR_Model *model = &(self->model);
+
+   if (!PyArg_ParseTuple(args, "ii", &dim, &n))  return NULL;
+
+   if (dim<0 || dim>=model->nOut) {
+      PyErr_SetString(PyExc_TypeError, "First parameter must indicate output dimension (0 <= dim < model.nOut).");
+      return NULL;
+   }
+
+   if (n<0 || n>=model->sub[dim].numRFS) {
+      PyErr_SetString(PyExc_TypeError, "Second parameter must indicate receptive field (0 <= n < model.num_rf[dim]).");
+      return NULL;
+   }
+
+   LWPR_ReceptiveField * rf_mdl = model->sub[dim].rf[n];
+   return get_array_from_vector(rf_mdl->nReg, rf_mdl->s);
 }
 
 static PyObject *PyLWPR_write_XML(PyLWPR *self, PyObject *args) {
@@ -794,6 +855,12 @@ static PyMethodDef PyLWPR_methods[] = {
      "rf_center(dim,n) retrieves the center of the n-th receptive field in output dimension dim."},
     {"rf_D", (PyCFunction)PyLWPR_rf_D, METH_VARARGS,
      "rf_D(dim,n) retrieves the distance metric of the n-th receptive field in output dimension dim."},
+    {"rf_beta", (PyCFunction)PyLWPR_rf_beta, METH_VARARGS,
+     "rf_beta(dim,n) retrieves the beta values of the n-th receptive field in output dimension dim."},
+    {"rf_beta0", (PyCFunction)PyLWPR_rf_beta0, METH_VARARGS,
+     "rf_beta0(dim,n) retrieves the beta0 value of the n-th receptive field in output dimension dim."},
+    {"rf_s", (PyCFunction)PyLWPR_rf_s, METH_VARARGS,
+     "rf_s(dim,n) retrieves the PLS loadings of the n-th receptive field in output dimension dim."},
     {"write_XML", (PyCFunction)PyLWPR_write_XML, METH_VARARGS,
      "write_XML(filename) writes the LWPR model to an XML file."},
     {"write_binary", (PyCFunction)PyLWPR_write_binary, METH_VARARGS,
